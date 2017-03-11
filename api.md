@@ -2,17 +2,17 @@
 
 <dl>
 <dt><a href="#LeftInnerJoinRelationship">LeftInnerJoinRelationship</a></dt>
-<dd><p>Most often, an entry in <code>SObject.prototype.propertyMap</code> simply defines a friendly alias that maps to specific
-SalesForce property (e.g. <code>{ listPrice: &#39;List_Price__c&#39; }</code>). However, there comes a time in every developer&#39;s life when
-a simple relationship won&#39;t cut it, and that&#39;s where this class comes in. It lets you define a more complex relationship involving a
+<dd><p>Most often, an entry in <code>SObject.prototype.propertyMap</code> simply defines a friendly alias for a property of a
+SalesForce SObject (e.g. <code>{ listPrice: &#39;List_Price__c&#39; }</code>). However, there comes a time in every developer&#39;s life when
+a simple relationship won&#39;t cut it, and that&#39;s when this class comes in. It lets you define a more complex relationship involving a
 <a href="https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com">left inner join</a>.</p>
 </dd>
 <dt><a href="#SObject">SObject</a></dt>
 <dd><p>Allows queries and CRUD operations to be performed on a SalesForce SObject with minimal setup and a friendly API.</p>
 <p>Simply give it the SObject&#39;s name (e.g. <code>Account</code>) and a <code>propertyMap</code> which defines friendly names for the properties
-you&#39;re interested in (e.g. <code>{ primaryContactName: &#39;Primary_Contact__r.Name&#39; }</code>). You can then query and update records
+in which you&#39;re interested (e.g. <code>{ primaryContactName: &#39;Primary_Contact__r.Name&#39; }</code>). Now you can query and update records
 using the friendly names, and this class takes care of the conversion to and from the SalesForce format.</p>
-<p>To use this class, either extend it and override its <code>objectName</code> and <code>propertyMap</code> properties, or simply create an
+<p>To use this class, either extend it to override its <code>objectName</code> and <code>propertyMap</code> properties, or simply create an
 instance by passing those properties into this class&#39;s constructor. Either approach will allow you to use the default
 implementations of the CRUD methods (e.g. <code>query()</code>, <code>insert()</code>, etc.) which automatically handle the property name conversion.</p>
 </dd>
@@ -32,9 +32,9 @@ prefer this error not be thrown, use <code>query()</code> instead of <code>get()
 <a name="LeftInnerJoinRelationship"></a>
 
 ## LeftInnerJoinRelationship
-Most often, an entry in `SObject.prototype.propertyMap` simply defines a friendly alias that maps to specific
-SalesForce property (e.g. `{ listPrice: 'List_Price__c' }`). However, there comes a time in every developer's life when
-a simple relationship won't cut it, and that's where this class comes in. It lets you define a more complex relationship involving a
+Most often, an entry in `SObject.prototype.propertyMap` simply defines a friendly alias for a property of a
+SalesForce SObject (e.g. `{ listPrice: 'List_Price__c' }`). However, there comes a time in every developer's life when
+a simple relationship won't cut it, and that's when this class comes in. It lets you define a more complex relationship involving a
 [left inner join](https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com).
 
 **Kind**: global class
@@ -84,10 +84,10 @@ get propertyMap {
 Allows queries and CRUD operations to be performed on a SalesForce SObject with minimal setup and a friendly API.
 
 Simply give it the SObject's name (e.g. `Account`) and a `propertyMap` which defines friendly names for the properties
-you're interested in (e.g. `{ primaryContactName: 'Primary_Contact__r.Name' }`). You can then query and update records
+in which you're interested (e.g. `{ primaryContactName: 'Primary_Contact__r.Name' }`). Now you can query and update records
 using the friendly names, and this class takes care of the conversion to and from the SalesForce format.
 
-To use this class, either extend it and override its `objectName` and `propertyMap` properties, or simply create an
+To use this class, either extend it to override its `objectName` and `propertyMap` properties, or simply create an
 instance by passing those properties into this class's constructor. Either approach will allow you to use the default
 implementations of the CRUD methods (e.g. `query()`, `insert()`, etc.) which automatically handle the property name conversion.
 
@@ -95,7 +95,7 @@ implementations of the CRUD methods (e.g. `query()`, `insert()`, etc.) which aut
 
 * [SObject](#SObject)
     * [new SObject(options)](#new_SObject_new)
-    * [.objectName](#SObject+objectName) : <code>Object</code>
+    * [.objectName](#SObject+objectName) : <code>string</code>
     * [.propertyMap](#SObject+propertyMap) : <code>Object</code>
     * [.getPropertyMap()](#SObject+getPropertyMap) ⇒ <code>Promise.&lt;Object&gt;</code>
     * [.get(options)](#SObject+get) ⇒ <code>Promise.&lt;Object&gt;</code>
@@ -129,7 +129,7 @@ implementations of the CRUD methods (e.g. `query()`, `insert()`, etc.) which aut
 
 <a name="SObject+objectName"></a>
 
-### sObject.objectName : <code>Object</code>
+### sObject.objectName : <code>string</code>
 Override this class to specify your SObject's name, including any required prefixes and suffixes.
 
 **Kind**: instance property of <code>[SObject](#SObject)</code>
@@ -142,8 +142,8 @@ get objectName() {
 <a name="SObject+propertyMap"></a>
 
 ### sObject.propertyMap : <code>Object</code>
-Defines friendly (i.e. camelCase) names for your SObject's ugly SalesForce property names, which are often
-riddled with suffixes, prefixes, underscores, etc. Nested SalesForce objects are supported (e.g. `'Contact.Customer_Rep__r.Name'`).
+Defines friendly (i.e. camelCase) names for your SObject's SalesForce property names, which are often
+riddled with suffixes, prefixes, and underscores. Nested SalesForce objects are also supported (e.g. `'Contact.Customer_Rep__r.Name'`).
 
 Override this property to define your SObject's properties. If you instead need the property map to be dynamic
 and determined asynchronously (for example, if you need to check a feature toggle to determine which properties
@@ -162,11 +162,10 @@ get propertyMap() {
 <a name="SObject+getPropertyMap"></a>
 
 ### sObject.getPropertyMap() ⇒ <code>Promise.&lt;Object&gt;</code>
-Defines friendly (i.e. camelCase) names for your SObject's ugly SalesForce property names, which are often
-riddled with suffixes, prefixes, underscores, etc. Nested SalesForce objects are supported
-(e.g. 'Contact.Customer_Rep__r.Name').
+Defines friendly (i.e. camelCase) names for your SObject's SalesForce property names, which are often
+riddled with suffixes, prefixes, and underscores. Nested SalesForce objects are also supported (e.g. `'Contact.Customer_Rep__r.Name'`).
 
-In most cases, an SObject's property map is static, so it's easiest to override `propertyMap` to define your
+In most use cases, a property map is static, so it's easiest to override `propertyMap` to define your
 SObject's properties. If you instead need the property map to be *dynamic* and determined asynchronously
 (for example, if you need to check a feature toggle to determine whether a property should be included),
 then override this asynchronous method instead. This can be useful, for example, for managing deployments.
@@ -239,10 +238,6 @@ Patches an entity by updating only the properties specified.
 
 **Kind**: instance method of <code>[SObject](#SObject)</code>
 **Returns**: <code>Object</code> - result<code>string</code> - result.id
-**Throws**:
-
-- <code>[ResourceNotFoundError](#ResourceNotFoundError)</code>
-
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -257,10 +252,6 @@ Deletes the given entity entity.
 
 **Kind**: instance method of <code>[SObject](#SObject)</code>
 **Returns**: <code>Promise.&lt;Object&gt;</code> - deletedEntity<code>string</code> - deletedEntity.id  - The ID of the entity deleted.
-**Throws**:
-
-- <code>[ResourceNotFoundError](#ResourceNotFoundError)</code>
-
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -381,10 +372,6 @@ Returns all results for the given SOQL query.
 
 **Kind**: instance method of <code>[SObject](#SObject)</code>
 **Returns**: <code>Array.&lt;Objects&gt;</code> - - Results in SalesForce format.
-**Throws**:
-
-- <code>BadRequestError</code>
-
 
 | Param | Type | Description |
 | --- | --- | --- |
