@@ -2,54 +2,38 @@
 
 <dl>
 <dt><a href="#LeftInnerJoinRelationship">LeftInnerJoinRelationship</a></dt>
-<dd><p>Whereas most SObject properties are mapped with a basic relationship to rename the property
-(e.g. { listPrice: &#39;List_Price__c&#39; }), this class can be used to define a more complex relationship
-involving a left inner join.</p>
-<p>For more info on the different types of SOQL joins, see this page:
-<a href="https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com">https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com</a></p>
+<dd><p>Most often, an entry in SObject.prototype.propertyMap simply defines a friendly alias that maps to specific
+SalesForce property (e.g. <code>{ listPrice: &#39;List_Price__c&#39; }</code>). Where this class comes in is when a simple
+relationship won&#39;t cut it you need to define a more complex relationship involving a
+<a href="https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com">left inner join</a>.</p>
 </dd>
 <dt><a href="#SObject">SObject</a></dt>
 <dd><p>Allows queries and CRUD operations to be performed on SalesForce SObjects with minimal setup and a friendly API.</p>
-<p>To use this class, either extend it and override the objectName and propertyMap properties, or simply create an
-instance by passing those properties into this class&#39;s constructor. Either way will allow you to use the default
-implementations of the CRUD methods which automatically convert property names from SalesForce format
-(i.e. with funky prefixes) and friendly camelCase format, and vice versa.</p>
+<p>To use this class, either extend it and override the <code>objectName</code> and <code>propertyMap</code> properties, or simply create an
+instance by passing those properties into this class&#39;s constructor. Either approach will allow you to use the default
+implementations of the CRUD methods (e.g. <code>query()</code>, <code>insert()</code>, etc.) <strong>which automatically convert property names from SalesForce format
+(i.e. with funky prefixes) to the friendly camelCase format, and vice versa</strong>.</p>
 </dd>
 <dt><a href="#SalesForceConnection">SalesForceConnection</a></dt>
-<dd><p>Manages a session with and requests to SalesForce&#39;s REST API, including authentication and automatically retrying requests.
-This class&#39;s interface consists of a single <code>request()</code> method, so if you want different request-level functionality, you
-can extend this class or implement a replacement with the same interface.</p>
-</dd>
-<dt><a href="#ExtendableError">ExtendableError</a></dt>
-<dd><p>An Error subclass that&#39;s extended easily in order to create custom
-errors that can be caught and that provide the specific error name when
-converted to a string.</p>
+<dd><p>Manages a session with and sends requests to SalesForce&#39;s REST API. It handles authentication and automatically retries
+common request failures (e.g. the infamous <code>UNABLE_TO_LOCK_ROW</code> error).</p>
+<p>This class&#39;s interface consists of a single <code>request()</code> method, so if you want different request-level functionality, you
+can extend this class or implement a replacement which implements the same interface.</p>
 </dd>
 <dt><a href="#ResourceNotFoundError">ResourceNotFoundError</a></dt>
-<dd><p>Error indicating that a requested resource could not be found (i.e. HTTP status 404).</p>
-</dd>
-<dt><a href="#NotImplementedError">NotImplementedError</a></dt>
-<dd><p>Error indicating that an abstract method was not implemented.</p>
-</dd>
-</dl>
-
-## Functions
-
-<dl>
-<dt><a href="#executeWithRetryWorker">executeWithRetryWorker()</a></dt>
-<dd><p>Utilities for helping with the execution of promises.</p>
+<dd><p>Indicates that <code>SObject.prototype.get()</code> couldn&#39;t find any records matching the search options provided to it.
+You can import this error class to check if an error is an instance of it. In scenarios where you
+prefer an error not be thrown if there is no matching record, use <code>query()</code> instead of <code>get()</code>.</p>
 </dd>
 </dl>
 
 <a name="LeftInnerJoinRelationship"></a>
 
 ## LeftInnerJoinRelationship
-Whereas most SObject properties are mapped with a basic relationship to rename the property
-(e.g. { listPrice: 'List_Price__c' }), this class can be used to define a more complex relationship
-involving a left inner join.
-
-For more info on the different types of SOQL joins, see this page:
-https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com
+Most often, an entry in SObject.prototype.propertyMap simply defines a friendly alias that maps to specific
+SalesForce property (e.g. `{ listPrice: 'List_Price__c' }`). Where this class comes in is when a simple
+relationship won't cut it you need to define a more complex relationship involving a
+[left inner join](https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Queries_on_Force.com).
 
 **Kind**: global class
 
@@ -72,21 +56,29 @@ https://developer.salesforce.com/page/A_Deeper_look_at_SOQL_and_Relationship_Que
 
 **Example**
 ```js
-// Example of how this relationship can be used to add a `pureCloudOrgId` object to a quote object.
-// The result is that `storage.query({ pureCloudOrgId: 'org0' })` gets translated into
-// "SELECT <other properties> FROM zqu__Quote__c where zqu__Account__c IN (SELECT Account__c FROM PureCloud_Organization__c WHERE Org_ID__c = 'org0'"
+// For this example, imagine two custom objects that each have a property which references an Account:
+//
+// 1. Organization__c object with properties:
+//     - Account__c
+//     - Org_ID__c
+//
+// 2. Quote__c with property:
+//     - Account__c
+//
+// This example demonstrates how to add an `organizationId` property for the quote object.
+// The result is that `quoteStorage.query({ organizationId: 'org0' })` gets translated into the query
+// "SELECT <other properties> FROM Quote__c where Account__c IN (SELECT Account__c FROM Organization__c WHERE Org_ID__c = 'org0'"
 
 get propertyMap {
-   ...
-   pureCloudOrgId: new LeftInnerJoinRelationship({
-       property: 'zqu__Account__c',
+   // ...
+   organizationId: new LeftInnerJoinRelationship({
+       property: 'Account__c',
        relatedObject: {
-           name: 'PureCloud_Organization__c',
-           comparisonProperty: 'Account__c', // PureCloud_Organization__r.Account__c
-           queryValueProperty: 'Org_ID__c'   // PureCloud_Organization__r.Org_ID__c
+           name: 'Organization__c',
+           comparisonProperty: 'Account__c', // Organization__r.Account__c
+           queryValueProperty: 'Org_ID__c'   // Organization__r.Org_ID__c
        }
    })
-   ...
 }
 ```
 <a name="LeftInnerJoinRelationship+createQueryComparison"></a>
@@ -105,10 +97,10 @@ Creates a query comparison that can be included in the predicate of a SOQL query
 ## SObject
 Allows queries and CRUD operations to be performed on SalesForce SObjects with minimal setup and a friendly API.
 
-To use this class, either extend it and override the objectName and propertyMap properties, or simply create an
-instance by passing those properties into this class's constructor. Either way will allow you to use the default
-implementations of the CRUD methods which automatically convert property names from SalesForce format
-(i.e. with funky prefixes) and friendly camelCase format, and vice versa.
+To use this class, either extend it and override the `objectName` and `propertyMap` properties, or simply create an
+instance by passing those properties into this class's constructor. Either approach will allow you to use the default
+implementations of the CRUD methods (e.g. `query()`, `insert()`, etc.) **which automatically convert property names from SalesForce format
+(i.e. with funky prefixes) to the friendly camelCase format, and vice versa**.
 
 **Kind**: global class
 
@@ -419,9 +411,11 @@ Returns all results for the given SOQL query.
 <a name="SalesForceConnection"></a>
 
 ## SalesForceConnection
-Manages a session with and requests to SalesForce's REST API, including authentication and automatically retrying requests.
+Manages a session with and sends requests to SalesForce's REST API. It handles authentication and automatically retries
+common request failures (e.g. the infamous `UNABLE_TO_LOCK_ROW` error).
+
 This class's interface consists of a single `request()` method, so if you want different request-level functionality, you
-can extend this class or implement a replacement with the same interface.
+can extend this class or implement a replacement which implements the same interface.
 
 **Kind**: global class
 
@@ -462,29 +456,11 @@ although in reality, only the small subset of options listed here are used by SO
 | options.json | <code>Object</code> &#124; <code>bool</code> |  |
 | options.headers | <code>Object</code> |  |
 
-<a name="ExtendableError"></a>
-
-## ExtendableError
-An Error subclass that's extended easily in order to create custom
-errors that can be caught and that provide the specific error name when
-converted to a string.
-
-**Kind**: global class
 <a name="ResourceNotFoundError"></a>
 
 ## ResourceNotFoundError
-Error indicating that a requested resource could not be found (i.e. HTTP status 404).
+Indicates that `SObject.prototype.get()` couldn't find any records matching the search options provided to it.
+You can import this error class to check if an error is an instance of it. In scenarios where you
+prefer an error not be thrown if there is no matching record, use `query()` instead of `get()`.
 
 **Kind**: global class
-<a name="NotImplementedError"></a>
-
-## NotImplementedError
-Error indicating that an abstract method was not implemented.
-
-**Kind**: global class
-<a name="executeWithRetryWorker"></a>
-
-## executeWithRetryWorker()
-Utilities for helping with the execution of promises.
-
-**Kind**: global function
